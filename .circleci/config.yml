@@ -169,7 +169,6 @@ jobs:
           command: |
             cd /home/circleci/project/backend
             npm install   
-            npm audit fix --force
             npm run migrations > migrations_dump.txt
       - run:
           name: Send migration results to memstash
