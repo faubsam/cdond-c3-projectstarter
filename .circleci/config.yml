@@ -191,9 +191,9 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            apt install -y python3-pip
-            python3 -m pip install --user ansible
-            apt install -y nodejs
+            sudo apt install -y python3-pip
+            sudo python3 -m pip install --user ansible
+            sudo apt install -y nodejs
             npm run build
 
       - run:
