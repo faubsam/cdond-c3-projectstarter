@@ -127,6 +127,8 @@ jobs:
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --output text >> inventory.txt
             cat inventory.txt
+            pwd
+            ls -la
 
       - persist_to_workspace:
           root: ~/
@@ -154,7 +156,7 @@ jobs:
           name: Configure server
           command: |
               cd .circleci/ansible
-              ansible-playbook -i .circleci/ansible/inventory.txt configure-server.yml
+              ansible-playbook -i inventory.txt configure-server.yml
             
       # Here's where you will add some code to rollback on failure 
 
