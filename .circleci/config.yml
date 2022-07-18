@@ -193,7 +193,7 @@ jobs:
           command: |
             sudo apt install -y python3-pip
             sudo python3 -m pip install --user ansible
-            sudo apt install -y nodejs
+            npm install
             npm run build
 
       - run:
