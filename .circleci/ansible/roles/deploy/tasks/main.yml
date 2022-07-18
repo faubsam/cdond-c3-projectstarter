@@ -26,6 +26,12 @@
     pm2 stop default
     cd /home/ubuntu
     pm2 start npm --name backend -- start
+
+- name: "Start npm"
+  become: yes
+  shell: |
+    npm run start 
+    
   environment: 
     ENVIRONMENT: production
     TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
