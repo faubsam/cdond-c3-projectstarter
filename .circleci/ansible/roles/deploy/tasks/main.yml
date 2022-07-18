@@ -2,7 +2,7 @@
 - name: copy backend folder archive to EC2
   become: yes
   copy:
-    src: /home/circlci/project/artifact.tar.gz
+    src: /home/circleci/project/artifact.tar.gz
     dest: /home/ubuntu/artifact.tar.gz
 
 - name: Extract tar archive on the ubuntu server
