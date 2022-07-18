@@ -3,6 +3,34 @@ version: 2.1
 orbs: 
   slack: circleci/slack@4.10.1
 
+commands:
+  destroy-environment:
+    description: Destroy back-end and front-end cloudformation stacks and empty s3 bucket.
+    steps:
+      - run:
+          name: Destroy environments
+          when: on_fail
+          command: |
+            aws s3 rm --recursive s3://udapeople-<< pipeline.parameters.workflow-id >>
+            aws cloudformation delete-stack --stack-name "udapeople-backend-<< pipeline.parameters.workflow-id >>"
+            aws cloudformation delete-stack --stack-name "udapeople-frontend-<< pipeline.parameters.workflow-id >>"
+  revert-migrations:
+    description: Revert the last migration
+    parameters:
+      workflow_id:
+        type: string      
+    steps:
+      - run:
+          name: Revert migrations
+          when: on_fail
+          command: |
+            SUCCESS=$(curl --insecure  https://kvdb.io/KpgTgCJbN1QoWjWHSPtdjA/migration_<< parameters.workflow_id >>)
+            if (( $SUCCESS == 1 ));
+            then
+                cd ~/project/backend
+                npm install
+                npm run migration:revert
+            fi 
 
 
 jobs:
@@ -216,7 +244,7 @@ jobs:
       # Here's where you will add some code to rollback on failure
   deploy-backend:
     docker:
-      - image: cimg/python:3.10.5
+      - image: cimg/python:3.10.5-node
     steps:
       - checkout
       - add_ssh_keys:
@@ -235,8 +263,6 @@ jobs:
           name: Install dependencies
           command: |
             python3 -m pip install --user ansible
-            pip install nodejs
-            pip install npm
             cd backend
             npm install
             npm run build
