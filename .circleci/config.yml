@@ -271,7 +271,10 @@ jobs:
       - run:
           name: Deploy backend
           command: |
-            tar -C backend -czvf artifact.tar.gz .
+            tar -C backend -czvf /home/circleci/project/artifact.tar.gz .
+            pwd
+            ls -la 
+            ls -la backend
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
@@ -329,7 +332,7 @@ workflows:
       - scan-backend:
           requires: [build-backend]
       - deploy-infrastructure:
-          requires: [scan-frontend, scan-backend]
+          requires: [test-frontend, test-backend]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
