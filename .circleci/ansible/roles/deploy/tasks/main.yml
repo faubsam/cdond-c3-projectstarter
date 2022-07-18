@@ -22,6 +22,7 @@
 
 - name: "Start pm2"
   become: yes
+  become_user: ubuntu
   shell: | 
     export PM2_HOME=/home/ubuntu
     pm2 stop default
