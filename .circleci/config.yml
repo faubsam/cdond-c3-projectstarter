@@ -310,10 +310,10 @@ jobs:
       - image: python:3.9.1-alpine3.12
     steps:
       - checkout 
-
       - run:
           name: Install dependencies
           command: |
+            apk add --no-cache aws-cli
             apk add --update curl nodejs npm
       - run:
           name: Get backend url
