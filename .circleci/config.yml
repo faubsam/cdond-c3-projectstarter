@@ -165,7 +165,11 @@ jobs:
       - run: 
           when: on_fail
           command: |
-            aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7}      
+            aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7}    
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations
+
   configure-infrastructure:
     docker:
       - image: cimg/python:3.10.5
@@ -186,7 +190,9 @@ jobs:
               cd .circleci/ansible
               ansible-playbook -i /home/circleci/project/.circleci/ansible/inventory.txt configure-server.yml
             
-      # Here's where you will add some code to rollback on failure 
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations
 
   run-migrations:
     docker:
@@ -207,8 +213,9 @@ jobs:
                 curl https://kvdb.io/KpgTgCJbN1QoWjWHSPtdjA/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
 
-            
-     # Here's where you will add some code to rollback on failure  
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations 
 
   deploy-frontend:
     docker:
@@ -226,10 +233,27 @@ jobs:
             unzip awscliv2.zip
             sudo ./aws/install
       - run:
+          name: Set env 
+          command: |
+            echo ENVIRONMENT=production > "backend/.env"
+            echo TYPEORM_CONNECTION=postgres >> "backend/.env"
+            echo TYPEORM_ENTITIES=./src/modules/domain/**/*.entity.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS=./src/migrations/*.ts >> "backend/.env"
+            echo TYPEORM_MIGRATIONS_DIR=./src/migrations >> "backend/.env"
+            echo NODE_ENV=production >> "backend/.env"
+            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
+            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
+            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
+            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
+            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
+      - run:
           name: Get backend url
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             export API_URL="http://${BACKEND_IP}:3030"
+            echo ENVIRONMENT=production > "frontend/.env"
+            echo NODE_ENV=production >> "frontend/.env"
+            echo API_URL=$API_URL >> "frontend/.env"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
             cat frontend/.env
@@ -241,7 +265,10 @@ jobs:
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
-      # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations
+
   deploy-backend:
     docker:
       - image: cimg/python:3.10.5-node
@@ -279,12 +306,16 @@ jobs:
             echo "Contents  of the inventory.txt file is -------"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
-      # Here's where you will add some code to rollback on failure
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations
+
   smoke-test:
     docker:
       - image: python:3.9.1-alpine3.12
     steps:
       - checkout 
+
       - run:
           name: Install dependencies
           command: |
@@ -292,7 +323,10 @@ jobs:
       - run:
           name: Get backend url
           command: |
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
             export API_URL="http://${BACKEND_IP}:3030"
+            echo "API_URL = ${API_URL}"
+            
       - run:
           name: Backend smoke test.
           command: |
@@ -314,7 +348,9 @@ jobs:
               else
                 return 1
               fi
-      # Here's where you will add some code to rollback on failure 
+      - destroy-environment:
+          workflow_id: "${CIRCLE_WORKFLOW_ID}"
+      - revert-migrations
 
 workflows:
   default:
