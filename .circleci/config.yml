@@ -183,19 +183,19 @@ jobs:
 
   deploy-frontend:
     docker:
-      - image: cimg/aws:2022.06.1
+      - image: cimg/node:13.8.0
     steps:
       - checkout 
       - attach_workspace:
           at: ~/
       - run:
-          name: Install dependencies
+          name: Install AWS CLI dependencies
           command: |
-            sudo apt install -y python3-pip
-            sudo python3 -m pip install --user ansible
-            npm install
-            npm run build
-
+            sudo apt-get update && sudo apt-get install -yy less
+            sudo apt-get install unzip -y
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - run:
           name: Get backend url
           command: |
@@ -213,7 +213,41 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure
+  deploy-backend:
+    docker:
+      - image: cimg/python:3.10.5
+    steps:
+      - checkout
+      - add_ssh_keys:
+              fingerprints: ["7e:cc:a2:75:00:c9:f7:69:73:9f:ea:78:7a:7c:57:57"]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install AWS CLI 
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            sudo apt-get install unzip -y
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m pip install --user ansible
+            cd backend
+            npm i
+            npm run build
+            cd ..
 
+      - run:
+          name: Deploy backend
+          command: |
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      # Here's where you will add some code to rollback on failure
 
 workflows:
   default:
@@ -235,4 +269,6 @@ workflows:
       - run-migrations:
           requires: [configure-infrastructure]
       - deploy-frontend:
+          requires: [run-migrations]
+      - deploy-backend:
           requires: [run-migrations]
