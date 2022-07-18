@@ -288,7 +288,6 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pip install aws cli
             apk add --update curl nodejs npm
       - run:
           name: Get backend url
@@ -311,7 +310,6 @@ jobs:
               echo ${URL} 
               if curl -s ${URL} | grep "Welcome"
               then
-                  # Change this to 0 after the job fails
                 return 1
               else
                 return 1
