@@ -315,17 +315,16 @@ jobs:
           command: |
             apk add --no-cache aws-cli
             apk add --update curl nodejs npm
-      - run:
-          name: Get backend url
-          command: |
-            export BACKEND_IP=$(aws ec2 describe-instances --filters project=udapeople --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            export API_URL="http://${BACKEND_IP}:3030/api/status"
-            echo "API_URL = ${API_URL}"
-            
+#      - run:
+#          name: Get backend url
+#          command: |
       - run:
           name: Backend smoke test.
           command: |
-            echo "${API_URL}"
+            export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
+            export API_URL="http://${BACKEND_IP}:3030/api/status"
+            echo "API_URL = ${API_URL}"
+            curl "$API_URL"
             if curl "$API_URL" | grep "ok"
             then
                 return 0
