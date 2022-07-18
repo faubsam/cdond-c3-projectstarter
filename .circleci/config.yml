@@ -235,7 +235,7 @@ jobs:
           command: |
             python3 -m pip install --user ansible
             cd backend
-            npm i
+            npm install
             npm run build
             cd ..
 
