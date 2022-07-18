@@ -315,7 +315,6 @@ jobs:
           command: |
             apk add --no-cache aws-cli
             apk add --update curl nodejs npm
-
       - run:
           name: Backend smoke test.
           command: |
