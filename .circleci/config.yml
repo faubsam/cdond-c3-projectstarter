@@ -350,6 +350,9 @@ jobs:
             export API_URL="http://${BACKEND_IP}:3030/api/status"
             echo "API_URL = ${API_URL}"
             sleep 60
+            curl "$API_URL"
+            curl "$API_URL"
+            curl "$API_URL"
             if curl "$API_URL" | grep "ok"
             then
                 return 0
@@ -402,6 +405,7 @@ workflows:
           requires: [build-frontend]
       - scan-backend:
           requires: [build-backend]
+      - cleanup
       - deploy-infrastructure:
           requires: [test-frontend, test-backend]
       - configure-infrastructure:
@@ -416,5 +420,3 @@ workflows:
           requires: [deploy-frontend, deploy-backend]
       - cloudfront-update:
           requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
