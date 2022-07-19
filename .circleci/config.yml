@@ -319,8 +319,9 @@ jobs:
           name: Backend smoke test.
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --output text)
-            export API_URL="${BACKEND_IP}:3030/api/status"
+            export API_URL="http://${BACKEND_IP}:3030/api/status"
             echo "API_URL = ${API_URL}"
+            sleep 60
             if curl "$API_URL" | grep "ok"
             then
                 return 0
