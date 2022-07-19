@@ -335,12 +335,29 @@ jobs:
               echo ${URL} 
               if curl -s ${URL} | grep "Welcome"
               then
-                return 1
+                return 0
               else
                 return 1
               fi
       - destroy-environment
       - revert-migrations
+
+  cloudfront-update:
+    docker:
+      - image: cimg/aws:2022.06.1
+    steps:
+      - checkout
+      - run:
+          name: Update cloudfront distribution
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/cloudfront.yml \
+              --stack-name InitialStack \
+              --parameter-overrides WorkflowID="udapeople-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --tags project=udapeople
+              
+            echo current_workflow_id: "${CIRCLE_WORKFLOW_ID:0:7}"
+      # Here's where you will add some code to rollback on failure  
 
 workflows:
   default:
