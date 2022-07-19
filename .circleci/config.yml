@@ -438,7 +438,7 @@ workflows:
           filters:
             branches:
               only: master
-      - cleanup
+      - cleanup:
           requires: [cloudfront-update]
           filters:
             branches:
